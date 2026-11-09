@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevOps Calculator</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding-top: 60px; }
+    .card { background: #fff; padding: 24px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,.1); width: 320px; }
+    input, select, button { width: 100%; padding: 10px; margin: 6px 0; box-sizing: border-box; font-size: 16px; }
+    button { background: #2563eb; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+    #result { margin-top: 12px; font-size: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>DevOps Calculator</h2>
+    <input id="a" type="number" placeholder="First number" />
+    <select id="operation">
+      <option value="add">+ Add</option>
+      <option value="subtract">- Subtract</option>
+      <option value="multiply">x Multiply</option>
+      <option value="divide">/ Divide</option>
+    </select>
+    <input id="b" type="number" placeholder="Second number" />
+    <button id="calc">Calculate</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    document.getElementById('calc').addEventListener('click', async () => {
+      const body = {
+        a: document.getElementById('a').value,
+        b: document.getElementById('b').value,
+        operation: document.getElementById('operation').value,
+      };
+      const res = await fetch('/api/calculate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      document.getElementById('result').textContent =
+        res.ok ? `Result: ${data.result}` : `Error: ${data.error}`;
+    });
+  </script>
+</body>
+</html>
