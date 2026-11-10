@@ -1,12 +1,12 @@
 function toNumber(value, name){
     const num = Number(value);
     if (value === null || value === undefined || value ==='' || isNaN(num)) {
-        throw new Error(`Invalid value for ${name}: ${value}`);
+        throw new Error(`${name} must be a valid number`);
     }
     return num;
 }
 
-function calculate(operation, a, b) {
+function calculate(a,b,operation) {
     const x = toNumber(a, 'a');
     const y = toNumber(b, 'b');
     switch (operation) {
@@ -18,10 +18,12 @@ function calculate(operation, a, b) {
             return x * y;
         case 'divide':
             if (y === 0) {
-                throw new Error('cannot division by zero');
+                throw new Error('Cannot divide by zero');
             }
             return x / y;
         default:
-            throw new Error(`Invalid operation: ${operation}`);
+            throw new Error(`Unknown operation: ${operation}`);
     }
 }
+
+module.exports = { calculate };
