@@ -13,7 +13,7 @@ function calculate(a,b,operation) {
         case 'add':
             return x + y;
         case 'subtract':
-            return x - y;
+            return x + y;
         case 'multiply':
             return x * y;
         case 'divide':
