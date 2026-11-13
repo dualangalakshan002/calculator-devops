@@ -1,0 +1,11 @@
+services:
+  calculator:
+    build:
+      context: .
+      args:
+        APP_VERSION: local
+    image: calculator-devops:local
+    container_name: calculator
+    ports:
+      - "3000:3000"
+    restart: unless-stopped

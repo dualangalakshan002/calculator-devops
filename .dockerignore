@@ -1,0 +1,12 @@
+node_modules
+coverage
+tests
+.git
+.gitignore
+.env
+*.log
+Dockerfile
+docker-compose.yml
+Jenkinsfile
+README.md
+eslint.config.js
