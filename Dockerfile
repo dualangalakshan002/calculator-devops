@@ -34,9 +34,9 @@ COPY --chown=node:node src ./src
 COPY --chown=node:node public ./public
 
 # Remove package managers the app never uses at runtime (fewer CVEs, smaller attack surface)
-RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
-           /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
-           /usr/local/bin/yarn /usr/local/bin/yarnpkg /opt/yarn-*
+# RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+#            /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
+#            /usr/local/bin/yarn /usr/local/bin/yarnpkg /opt/yarn-*
 
 #Never run as root onside the container
 
