@@ -1,0 +1,77 @@
+---
+- name: Configure the calculator server
+  hosts: app
+  become: true
+  gather_facts: false
+
+  vars:
+    docker_packages:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+
+  pre_tasks:
+    - name: Wait until the new server accepts SSH
+      ansible.builtin.wait_for_connection:
+        timeout: 300
+
+    - name: Wait for cloud-init to finish (avoids apt lock errors)
+      ansible.builtin.command: cloud-init status --wait
+      changed_when: false
+
+    - name: Gather facts (OS version, CPU architecture, ...)
+      ansible.builtin.setup:
+
+  tasks:
+    - name: Install prerequisites
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+          - python3-debian # needed by deb822_repository
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Add Docker's official apt repository (with its signing key)
+      ansible.builtin.deb822_repository:
+        name: docker
+        types: deb
+        uris: https://download.docker.com/linux/ubuntu
+        suites: "{{ ansible_facts['distribution_release'] }}"
+        components: stable
+        architectures: "{{ 'arm64' if ansible_facts['architecture'] == 'aarch64' else 'amd64' }}"
+        signed_by: https://download.docker.com/linux/ubuntu/gpg
+
+    - name: Install Docker Engine
+      ansible.builtin.apt:
+        name: "{{ docker_packages }}"
+        state: present
+        update_cache: true
+
+    - name: Make sure Docker is running and starts on boot
+      ansible.builtin.systemd_service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Let the ubuntu user run docker without sudo
+      ansible.builtin.user:
+        name: ubuntu
+        groups: docker
+        append: true
+
+    - name: Reconnect so the new group membership applies
+      ansible.builtin.meta: reset_connection
+
+    - name: Check Docker works as the ubuntu user
+      ansible.builtin.command: docker version --format '{{ "{{" }}.Server.Version{{ "}}" }}'
+      become: false
+      register: docker_check
+      changed_when: false
+
+    - name: Show Docker version
+      ansible.builtin.debug:
+        msg: "Docker {{ docker_check.stdout }} is ready on {{ inventory_hostname }}"
