@@ -132,6 +132,45 @@ pipeline {
                 }
             }
         }
+        stage('Deploy to AWS') {
+            steps {
+                withCredentials([sshUserPrivateKey(
+                    credentialsId: 'ec2-ssh-key',
+                    keyFileVariable: 'SSH_KEY',
+                    usernameVariable: 'SSH_USER'
+                )]) {
+                    sh '''
+                        test -n "$DEPLOY_HOST" || { echo "ERROR: DEPLOY_HOST is not set in Jenkins"; exit 1; }
+                        mkdir -p ~/.ssh && chmod 700 ~/.ssh
+
+                        ssh -i "$SSH_KEY" \
+                            -o StrictHostKeyChecking=accept-new \
+                            -o ConnectTimeout=10 \
+                            "$SSH_USER@$DEPLOY_HOST" \
+                            "bash -s" -- "${DOCKERHUB_REPO}:${IMAGE_TAG}" "${IMAGE_TAG}" \
+                            < scripts/remote-deploy.sh
+                    '''
+                }
+            }
+        }
+
+        stage('Verify Production') {
+            steps {
+                sh '''
+                    for i in $(seq 1 10); do
+                        RESPONSE=$(curl -fs --max-time 5 "http://${DEPLOY_HOST}/health" || true)
+                        echo "Attempt $i: $RESPONSE"
+                        if echo "$RESPONSE" | grep -q "\\"version\\":\\"${IMAGE_TAG}\\""; then
+                            echo "Production is serving ${IMAGE_TAG}: http://${DEPLOY_HOST}"
+                            exit 0
+                        fi
+                        sleep 3
+                    done
+                    echo "Production check FAILED"
+                    exit 1
+                '''
+            }
+        }
     }
 
     post {
